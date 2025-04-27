@@ -1,0 +1,16 @@
+# Node modules (should never be pushed)
+node_modules/
+
+# Environment variables (contains sensitive info)
+.env
+
+# Logs
+*.log
+
+# Cache files
+.cache/
+
+# IDE/editor files
+.vscode/
+.DS_Store
+.idea/
