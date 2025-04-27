@@ -24,7 +24,7 @@ const ManageOrders = () => {
 
   // Real-Time Updates for New Orders and Status Changes
   useEffect(() => {
-    const socket = io("http://localhost:5000"); // Connect to the backend
+    const socket = io(axiosInstance.defaults.baseURL.replace('/api', '')); // Connect to the backend
 
     // Listen for "new-order" events
     socket.on("new-order", (order) => {
