@@ -29,7 +29,7 @@ const OngoingOrdersPage = () => {
 
   // Handle real-time updates via Socket.IO
   useEffect(() => {
-    const socket = io("http://localhost:5000"); // Connect to the backend server
+    const socket = io(axiosInstance.defaults.baseURL.replace('/api', '')); // Connect to the backend server
 
     // Listen for order status changes
     socket.on("order-status-changed", (updatedOrder) => {
@@ -83,7 +83,7 @@ const OngoingOrdersPage = () => {
         
         // Manually emit the event (if using Socket.IO on frontend)
         // Note: This is a fallback - the server should handle this!
-        const socket = io("http://localhost:5000");
+        const socket = io(axiosInstance.defaults.baseURL.replace('/api', ''));
         socket.emit("order-status-changed", { 
           _id: cancelOrderId, 
           status: "Canceled" 
