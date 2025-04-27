@@ -39,7 +39,7 @@ connectDB();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*", // Allow all origins (adjust for production)
+    origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE"],
   },
 });
@@ -69,20 +69,19 @@ setInterval(() => {
   notifyAdminOfLowStock();
 }, 3600000);
 
-// ================== CRITICAL FIXES ================== //
-// 1. Serve static files from the CORRECT frontend folder
+// ================== FRONTEND SERVING ================== //
 const __dirname = path.resolve();
-const frontendFolder = process.env.FRONTEND_BUILD_FOLDER || "dist";
-const frontendPath = path.join(__dirname, "..", "frontend", frontendFolder); // Fixed path
+const frontendPath = path.join(__dirname, "../frontend/dist");
 
+// Serve static files (CSS, JS, images)
 app.use(express.static(frontendPath));
 
-// Catch-all route (EXCLUDES /api routes)
-app.get(/^\/(?!api).*/, (req, res) => {
+// Handle SPA client-side routing (serve index.html for all unmatched routes)
+app.get("*", (req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });
 
-// Error Handling Middleware (Add this last)
+// Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send("Something broke!");
