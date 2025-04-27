@@ -108,7 +108,7 @@ const ProductDetails = () => {
               <h2 className="text-3xl font-bold tracking-widest mb-2">HOT</h2>
               <div className="w-[70%] bg-zinc-800 py-5 mx-auto rounded-xl mb-5">
                 <img
-                  src={`http://localhost:5000/${product.image}`}
+                  src={`${axiosInstance.defaults.baseURL.replace('/api', '')}/${product.image}`}
                   alt={`${product.name} - Hot`}
                   className="h-auto aspect-square object-cover mx-auto rounded-4xl w-[50%] mb-6 cursor-pointer"
                 />
@@ -142,7 +142,7 @@ const ProductDetails = () => {
               <h2 className="text-3xl font-bold tracking-widest mb-2">ICED</h2>
               <div className="w-[70%] bg-zinc-800 py-5 mx-auto rounded-xl mb-5">
                 <img
-                  src={`http://localhost:5000/${product.image}`}
+                  src={`${axiosInstance.defaults.baseURL.replace('/api', '')}/${product.image}`}
                   alt={`${product.name} - Iced`}
                   className="h-auto aspect-square object-cover mx-auto rounded-4xl w-[50%] mb-6 cursor-pointer"
                 />
