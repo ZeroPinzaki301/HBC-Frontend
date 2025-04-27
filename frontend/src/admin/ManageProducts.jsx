@@ -161,7 +161,7 @@ const ManageProducts = () => {
             <p className="text-lg">Type: {product.productType}</p>
             {product.productType === "beverages" && <p className="text-lg">Beverage Type: {product.beverageType}</p>}
             <img
-              src={`http://localhost:5000/${product.image}`}
+              src={`${axiosInstance.defaults.baseURL.replace('/api', '')}/${product.image}`}
               alt={product.name}
               className="w-full h-40 object-cover rounded-lg mt-4"
             />
