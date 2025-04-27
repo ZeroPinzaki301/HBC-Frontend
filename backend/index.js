@@ -1,111 +1,77 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import http from 'http';
-import { Server } from 'socket.io';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import connectDB from './config/db.js';
-// Import all your route files
-import userRouter from './routes/user.route.js';
-import adminRouter from './routes/admin.route.js';
-import productRouter from './routes/product.route.js';
-import orderRouter from './routes/order.route.js';
-import cartRouter from './routes/cart.route.js';
-import messageRouter from './routes/message.route.js';
-import paymentRouter from './routes/payment.route.js';
-import { notifyAdminOfLowStock } from './utils/lowStockNotifier.js';
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import http from "http"; // Import http to create a server
+import { Server } from "socket.io"; // Import Socket.IO
+import connectDB from "./config/db.js";
+import userRouter from "./routes/user.route.js";
+import adminRouter from "./routes/admin.route.js";
+import productRouter from "./routes/product.route.js";
+import orderRouter from "./routes/order.route.js";
+import cartRouter from "./routes/cart.route.js";
+import messageRouter from "./routes/message.route.js";
+import paymentRouter from "./routes/payment.route.js"
+import { notifyAdminOfLowStock } from "./utils/lowStockNotifier.js";
 
-// Configure environment
 dotenv.config();
 
-// Initialize Express
+// Initialize Express app
 const app = express();
-
-// Get directory name
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS Configuration
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || "https://hype-beans-cafe-pip9.onrender.com",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
+  origin: 'https://hype-beans-cafe-pip9.onrender.com', // Replace with your frontend's URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Restrict to necessary methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
 };
+
 app.use(cors(corsOptions));
 
-// Database Connection
+
+// Connect to MongoDB
 connectDB();
 
-// Socket.IO Setup
-const server = http.createServer(app);
+// Initialize HTTP server and Socket.IO
+const server = http.createServer(app); // Create HTTP server
 const io = new Server(server, {
   cors: {
-    origin: corsOptions.origin,
+    origin: "*", // Allow all origins for simplicity; secure in production
     methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true
-  }
+  },
 });
 
-// Socket.IO Events
-io.on('connection', (socket) => {
-  console.log(`Client connected: ${socket.id}`);
-  socket.on('disconnect', () => {
-    console.log(`Client disconnected: ${socket.id}`);
+// Admin connection for real-time notifications
+io.on("connection", (socket) => {
+  console.log(`Admin connected: ${socket.id}`);
+
+  socket.on("disconnect", () => {
+    console.log(`Admin disconnected: ${socket.id}`);
   });
 });
 
-// API Routes (MUST COME BEFORE STATIC FILES)
-app.use('/api/users', userRouter);
-app.use('/api/admin', adminRouter);
-app.use('/api/products', productRouter);
-app.use('/api/orders', orderRouter);
-app.use('/api/cart', cartRouter);
-app.use('/api/messages', messageRouter);
-app.use('/api/payment-proof', paymentRouter);
+// Export io for use in other files
+export { io };
 
-// Static Files (Uploads)
-app.use('/uploads', express.static('uploads'));
+// Routes
+app.use("/api/users", userRouter);
+app.use("/api/admin", adminRouter);
+app.use("/api/products", productRouter);
+app.use("/api/orders", orderRouter);
+app.use("/api/cart", cartRouter);
+app.use("/api/messages", messageRouter);
+app.use("/api/payment-proof", paymentRouter)
 
-// Low Stock Notifier
+app.use("/uploads", express.static("uploads"));
+
+// Function that sends email to the admin for low stocks every hour
 setInterval(() => {
   notifyAdminOfLowStock();
 }, 3600000);
 
-// ========== CRITICAL FIX ========== //
-const frontendPath = path.join(__dirname, '../frontend/dist');
-
-// Serve static files from Vite build
-app.use(express.static(frontendPath));
-
-// SPA Fallback Route - MUST BE LAST
-app.get('*', (req, res, next) => {
-  // Skip API routes
-  if (req.path.startsWith('/api')) return next();
-  
-  // Serve index.html for all other routes
-  res.sendFile(path.join(frontendPath, 'index.html'));
-});
-
-// Error Handling
-app.use((err, req, res, next) => {
-  console.error('Server Error:', err.message);
-  res.status(500).json({
-    error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
-  });
-});
-
-// Start Server
+// Start the server
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Serving frontend from: ${frontendPath}`);
-});
 
-export { io };
+server.listen(PORT, () => {
+  console.log(`Server running on port: ${PORT}`);
+});
