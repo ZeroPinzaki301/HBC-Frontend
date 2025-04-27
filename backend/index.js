@@ -20,7 +20,14 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(cors());
+const corsOptions = {
+  origin: 'https://hype-beans-cafe-pip9.onrender.com', // Replace with your frontend's URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Restrict to necessary methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
+};
+
+app.use(cors(corsOptions));
+
 
 // Connect to MongoDB
 connectDB();
