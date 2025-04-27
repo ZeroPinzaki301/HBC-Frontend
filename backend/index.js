@@ -6,6 +6,7 @@ import { Server } from 'socket.io';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
+// Import all your route files
 import userRouter from './routes/user.route.js';
 import adminRouter from './routes/admin.route.js';
 import productRouter from './routes/product.route.js';
@@ -15,13 +16,13 @@ import messageRouter from './routes/message.route.js';
 import paymentRouter from './routes/payment.route.js';
 import { notifyAdminOfLowStock } from './utils/lowStockNotifier.js';
 
-// Configure environment variables
+// Configure environment
 dotenv.config();
 
 // Initialize Express
 const app = express();
 
-// Get directory name for ES modules
+// Get directory name
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -59,7 +60,7 @@ io.on('connection', (socket) => {
   });
 });
 
-// API Routes
+// API Routes (MUST COME BEFORE STATIC FILES)
 app.use('/api/users', userRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/products', productRouter);
@@ -76,31 +77,24 @@ setInterval(() => {
   notifyAdminOfLowStock();
 }, 3600000);
 
-// ================== FRONTEND SERVING ================== //
+// ========== CRITICAL FIX ========== //
 const frontendPath = path.join(__dirname, '../frontend/dist');
 
-// Serve static assets from Vite build
-app.use(express.static(frontendPath, {
-  setHeaders: (res) => {
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-  }
-}));
+// Serve static files from Vite build
+app.use(express.static(frontendPath));
 
-// SPA Fallback Route - MUST come last
+// SPA Fallback Route - MUST BE LAST
 app.get('*', (req, res, next) => {
+  // Skip API routes
   if (req.path.startsWith('/api')) return next();
-  res.sendFile(path.join(frontendPath, 'index.html'), {
-    headers: {
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0'
-    }
-  });
+  
+  // Serve index.html for all other routes
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
-// Error Handling Middleware
+// Error Handling
 app.use((err, req, res, next) => {
-  console.error('Error:', err.stack);
+  console.error('Server Error:', err.message);
   res.status(500).json({
     error: 'Internal Server Error',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
@@ -111,8 +105,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`Frontend served from: ${frontendPath}`);
-  console.log(`CORS allowed origin: ${corsOptions.origin}`);
+  console.log(`Serving frontend from: ${frontendPath}`);
 });
 
 export { io };
