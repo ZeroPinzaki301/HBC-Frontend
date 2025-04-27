@@ -78,7 +78,7 @@ const ProductsPage = () => {
                     <Link to={`/products/${product._id}`} key={product._id}>
                       <div className="bg-zinc-800 p-4 md:py-7 rounded-lg shadow-md">
                         <img
-                          src={`http://localhost:5000/${product.image}`}
+                          src={`${axiosInstance.defaults.baseURL.replace('/api', '')}/${product.image}`}
                           alt={product.name}
                           className="h-auto aspect-square object-cover mx-auto rounded-full mb-4 w-[70%] md:w-[60%]"
                         />
@@ -101,7 +101,7 @@ const ProductsPage = () => {
                     <Link to={`/products/${product._id}`} key={product._id}>
                       <div className="bg-zinc-800 p-4 md:py-7 rounded-lg shadow-md">
                         <img
-                          src={`http://localhost:5000/${product.image}`}
+                          src={`${axiosInstance.defaults.baseURL.replace('/api', '')}/${product.image}`}
                           alt={product.name}
                           className="h-auto aspect-square object-cover mx-auto rounded-full mb-4 w-[70%] md:w-[60%]"
                         />
@@ -127,7 +127,7 @@ const ProductsPage = () => {
                   <Link to={`/products/${product._id}`} key={product._id}>
                     <div className="bg-zinc-800 p-4 md:py-7 rounded-lg shadow-md">
                       <img
-                        src={`http://localhost:5000/${product.image}`}
+                        src={`${axiosInstance.defaults.baseURL.replace('/api', '')}/${product.image}`}
                         alt={product.name}
                         className="h-auto aspect-square object-cover mx-auto rounded-full mb-4 w-[70%] md:w-[60%]"
                       />
@@ -148,7 +148,7 @@ const ProductsPage = () => {
               .map((product) => (
                 <div key={product._id} className="bg-white p-4 md:py-7 rounded-lg shadow-md">
                   <img
-                    src={`http://localhost:5000/${product.image}`}
+                    src={`${axiosInstance.defaults.baseURL.replace('/api', '')}/${product.image}`}
                     alt={product.name}
                     className="h-auto aspect-square object-cover mx-auto rounded-full mb-4 w-[70%] md:w-[60%]"
                   />
