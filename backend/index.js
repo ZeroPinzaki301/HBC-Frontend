@@ -1,24 +1,29 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import http from "http";
-import { Server } from "socket.io";
-import path from "path";
-import connectDB from "./config/db.js";
-import userRouter from "./routes/user.route.js";
-import adminRouter from "./routes/admin.route.js";
-import productRouter from "./routes/product.route.js";
-import orderRouter from "./routes/order.route.js";
-import cartRouter from "./routes/cart.route.js";
-import messageRouter from "./routes/message.route.js";
-import paymentRouter from "./routes/payment.route.js";
-import { notifyAdminOfLowStock } from "./utils/lowStockNotifier.js";
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import http from 'http';
+import { Server } from 'socket.io';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import connectDB from './config/db.js';
+import userRouter from './routes/user.route.js';
+import adminRouter from './routes/admin.route.js';
+import productRouter from './routes/product.route.js';
+import orderRouter from './routes/order.route.js';
+import cartRouter from './routes/cart.route.js';
+import messageRouter from './routes/message.route.js';
+import paymentRouter from './routes/payment.route.js';
+import { notifyAdminOfLowStock } from './utils/lowStockNotifier.js';
 
-// Load environment variables
+// Configure environment variables
 dotenv.config();
 
 // Initialize Express
 const app = express();
+
+// Get directory name for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Middleware
 app.use(express.json());
@@ -45,52 +50,61 @@ const io = new Server(server, {
 });
 
 // Socket.IO Events
-io.on("connection", (socket) => {
+io.on('connection', (socket) => {
   console.log(`Client connected: ${socket.id}`);
-  socket.on("disconnect", () => {
+  socket.on('disconnect', () => {
     console.log(`Client disconnected: ${socket.id}`);
   });
 });
 
 // API Routes
-app.use("/api/users", userRouter);
-app.use("/api/admin", adminRouter);
-app.use("/api/products", productRouter);
-app.use("/api/orders", orderRouter);
-app.use("/api/cart", cartRouter);
-app.use("/api/messages", messageRouter);
-app.use("/api/payment-proof", paymentRouter);
+app.use('/api/users', userRouter);
+app.use('/api/admin', adminRouter);
+app.use('/api/products', productRouter);
+app.use('/api/orders', orderRouter);
+app.use('/api/cart', cartRouter);
+app.use('/api/messages', messageRouter);
+app.use('/api/payment-proof', paymentRouter);
 
 // Static Files (Uploads)
-app.use("/uploads", express.static("uploads"));
+app.use('/uploads', express.static('uploads'));
 
-// Low Stock Notifier (Runs hourly)
+// Low Stock Notifier
 setInterval(() => {
   notifyAdminOfLowStock();
 }, 3600000);
 
-// ================== FRONTEND SERVING ================== //
-const __dirname = path.resolve();
-const frontendPath = path.join(__dirname, "../frontend/dist");
-
-// Serve static files (CSS, JS, images)
+// Serve Frontend Build
+const frontendPath = path.join(__dirname, '../frontend/dist');
 app.use(express.static(frontendPath));
 
-// Handle SPA client-side routing (serve index.html for all unmatched routes)
-app.get("*", (req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
+// SPA Fallback Route (Must come after API routes)
+app.get(/^(?!\/api).*/, (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send("Something broke!");
+  console.error('Error:', err.message);
+  
+  if (err instanceof TypeError && err.message.includes('Missing parameter name')) {
+    return res.status(400).json({ 
+      error: 'Invalid route configuration',
+      message: 'A route parameter is missing a name'
+    });
+  }
+  
+  res.status(500).json({ 
+    error: 'Internal Server Error',
+    message: err.message || 'Something went wrong'
+  });
 });
 
 // Start Server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Frontend served from: ${frontendPath}`);
 });
 
 export { io };
