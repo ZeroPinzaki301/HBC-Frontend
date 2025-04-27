@@ -34,6 +34,7 @@ const corsOptions = {
   origin: process.env.FRONTEND_URL || "https://hype-beans-cafe-pip9.onrender.com",
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
 };
 app.use(cors(corsOptions));
 
@@ -44,9 +45,10 @@ connectDB();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: corsOptions.origin,
     methods: ["GET", "POST", "PUT", "DELETE"],
-  },
+    credentials: true
+  }
 });
 
 // Socket.IO Events
@@ -74,29 +76,34 @@ setInterval(() => {
   notifyAdminOfLowStock();
 }, 3600000);
 
-// Serve Frontend Build
+// ================== FRONTEND SERVING ================== //
 const frontendPath = path.join(__dirname, '../frontend/dist');
-app.use(express.static(frontendPath));
 
-// SPA Fallback Route (Must come after API routes)
-app.get(/^(?!\/api).*/, (req, res) => {
-  res.sendFile(path.join(frontendPath, 'index.html'));
+// Serve static assets from Vite build
+app.use(express.static(frontendPath, {
+  setHeaders: (res) => {
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  }
+}));
+
+// SPA Fallback Route - MUST come last
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+  res.sendFile(path.join(frontendPath, 'index.html'), {
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    }
+  });
 });
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
-  console.error('Error:', err.message);
-  
-  if (err instanceof TypeError && err.message.includes('Missing parameter name')) {
-    return res.status(400).json({ 
-      error: 'Invalid route configuration',
-      message: 'A route parameter is missing a name'
-    });
-  }
-  
-  res.status(500).json({ 
+  console.error('Error:', err.stack);
+  res.status(500).json({
     error: 'Internal Server Error',
-    message: err.message || 'Something went wrong'
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
   });
 });
 
@@ -105,6 +112,7 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Frontend served from: ${frontendPath}`);
+  console.log(`CORS allowed origin: ${corsOptions.origin}`);
 });
 
 export { io };
