@@ -138,7 +138,7 @@ const CartPage = () => {
                 >
                   <div className="flex items-center mb-4">
                     <img
-                      src={`http://localhost:5000/${item.product.image}`}
+                      src={`${axiosInstance.defaults.baseURL.replace}('/api', '');${item.product.image}`}
                       alt={item.product.name}
                       className="w-16 h-16 object-cover rounded-lg"
                     />
