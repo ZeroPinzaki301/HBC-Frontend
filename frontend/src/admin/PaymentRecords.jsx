@@ -68,7 +68,7 @@ const AdminPaymentProofs = () => {
                     <strong>Proof Image:</strong>
                   </p>
                   <a
-                    href={`http://localhost:5000/${proof.proofImage}`}
+                    href={`${axiosInstance.defaults.baseURL.replace('/api', '')}/${proof.proofImage}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:underline"
