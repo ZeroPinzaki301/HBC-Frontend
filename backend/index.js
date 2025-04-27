@@ -72,12 +72,12 @@ setInterval(() => {
 // ================== CRITICAL FIXES ================== //
 // 1. Serve static files from the CORRECT frontend folder
 const __dirname = path.resolve();
-const frontendFolder = process.env.FRONTEND_BUILD_FOLDER || "dist"; // "build" for CRA
-const frontendPath = path.join(__dirname, "frontend", frontendFolder);
+const frontendFolder = process.env.FRONTEND_BUILD_FOLDER || "dist";
+const frontendPath = path.join(__dirname, "..", "frontend", frontendFolder); // Fixed path
 
 app.use(express.static(frontendPath));
 
-// 2. Catch-all route (EXCLUDES /api routes)
+// Catch-all route (EXCLUDES /api routes)
 app.get(/^\/(?!api).*/, (req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });
